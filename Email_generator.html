@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flat Email Generator</title>
+<style>
+body { font-family: Arial; padding: 20px; }
+#container { max-width: 500px; margin: auto; }
+label { font-weight: bold; display: block; margin-bottom: 8px; font-size: 18px; }
+input { width: 100%; padding: 12px; font-size: 20px; }
+button {
+ width: 100%; padding: 15px; font-size: 20px;
+ margin-top: 20px; border: none; background: #007bff; color: white; border-radius: 6px;
+}
+#error { color: red; margin-top: 15px; font-weight: bold; font-size: 20px; }
+.hint { color: #444; margin-top: 5px; font-size: 16px; line-height: 1.4; }
+</style>
+
+<script>
+function validateFlat() {
+    let flat = document.getElementById("flat").value.trim().toUpperCase();
+    let error = "";
+    let friendly = "";
+
+    function exampleBlock() {
+        return "Format: <b>[Tower][Floor][House]</b> (5 characters)<br>" +
+               "Examples:<br>" +
+               "- A0203 → Tower A, Floor 02, House 03<br>" +
+               "- B0107 → Tower B, Floor 01, House 07<br>" +
+               "- A1121 → Tower A, Floor 11, House 21<br>";
+    }
+
+    // Length issue
+    if(flat.length !== 5) {
+        error = "Invalid Flat Number Format";
+        friendly = "The flat number should be exactly 5 characters like <b>A0203</b> or <b>B0107</b>.<br><br>" + exampleBlock();
+    }
+    else {
+        let tower = flat.charAt(0);
+        let floor = parseInt(flat.substring(1,3));
+        let house = parseInt(flat.substring(3,5));
+
+        if(tower !== "A" && tower !== "B") {
+            error = "Invalid Tower";
+            friendly = "Tower should be A or B.<br><br>" + exampleBlock();
+        }
+        else if(isNaN(floor) || floor < 1 || floor > 23) {
+            error = "Invalid Floor";
+            friendly = "Are you sure " + (isNaN(floor) ? "that" : floor) +
+                       " is your floor number? Valid floors are 01–23.<br><br>" + exampleBlock();
+        }
+        else if(isNaN(house)) {
+            error = "Invalid House Number";
+            friendly = "House number must be numeric.<br><br>" + exampleBlock();
+        }
+        else {
+            if(tower === "A" && (house < 1 || house > 33)) {
+                error = "Invalid House Number";
+                friendly = "Are you sure " + house +
+                           " is your house number? Tower A has houses 01–33.<br><br>" + exampleBlock();
+            }
+            if(tower === "B" && (house < 1 || house > 35)) {
+                error = "Invalid House Number";
+                friendly = "Are you sure " + house +
+                           " is your house number? Tower B has houses 01–35.<br><br>" + exampleBlock();
+            }
+        }
+    }
+
+    if(error !== "") {
+        document.getElementById("error").innerHTML =
+            "<span style='font-size:22px;'>" + error + "</span><br>" +
+            "<span class='hint'>" + friendly + "</span>";
+        document.getElementById("emailBtn").style.display = "none";
+        return;
+    }
+
+    document.getElementById("error").innerText = "";
+
+    // Build mail body
+    let today = new Date();
+    let dd = String(today.getDate()).padStart(2,'0');
+    let mm = String(today.getMonth()+1).padStart(2,'0');
+    let yyyy = today.getFullYear();
+    let dateStr = dd + mm + yyyy;
+
+    let toMail = "ilcsupport@incor.in";
+
+    let ccList =
+    "enquiries@incorlakecity.com,ilcsupport@incorlakecity.in," +
+    "sanjay.padamatwar@incorlakecity.com,abdulla.hussain@incorlakecity.com,deepika.sripathi@incorlakecity.com," +
+    "swathi.kowlampet@incorlakecity.com,satyanarayana.potukuchi@incorlakecity.com,srikanth.basineni@incorlakecity.com," +
+    "surya@incor.in,info@incor.in,ramesh.vantaram@incor.in,ananth.kalle@incor.in,prudhvi.chinta@incor.in," +
+    "srikanth.bejugam@incorlakecity.com,ilcsupport@incorlakecity.com";
+
+    let subject =
+        "Request to share progress & expected possession date – Flat " + flat +
+        " – Dated " + dateStr;
+
+    let body =
+`Hi Team,
+
+I hereby request you to share the progress and also the expected possession date of our flat i.e ${flat}.
+
+Thanks,
+Flat owner of ${flat}`;
+
+    let mailtoLink =
+        "mailto:" + toMail +
+        "?cc=" + encodeURIComponent(ccList) +
+        "&subject=" + encodeURIComponent(subject) +
+        "&body=" + encodeURIComponent(body);
+
+    document.getElementById("emailBtn").href = mailtoLink;
+    document.getElementById("emailBtn").style.display = "block";
+}
+</script>
+</head>
+
+<body>
+<div id="container">
+    <label>Enter your flat number (e.g., A0203, B0107):</label>
+    <input id="flat" placeholder="e.g., A0203" />
+    <button onclick="validateFlat()">Next</button>
+    <div id="error"></div>
+    <a id="emailBtn" style="display:none; text-decoration:none;">
+        <button style="background:green;">Open mail app to send mail</button>
+    </a>
+</div>
+</body>
+</html>
