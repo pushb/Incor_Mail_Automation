@@ -167,22 +167,33 @@
             width: 100%;
         }
         .cc-body.open { 
-            max-height: 250px; 
+            max-height: 350px; 
             margin-top: 10px; 
             padding-top: 10px; 
             border-top: 1px dashed #e2e8f0; 
         }
 
         .cc-item {
-            display: flex; align-items: center;
-            padding: 6px 0;
+            display: flex; align-items: start;
+            padding: 8px 0;
             cursor: pointer;
             transition: opacity 0.2s;
+            border-bottom: 1px solid #f1f5f9;
         }
+        .cc-item:last-child { border-bottom: none; }
         .cc-item:hover { opacity: 0.8; }
-        .cc-item input { margin-right: 12px; width: 16px; height: 16px; accent-color: var(--primary); cursor: pointer; }
-        .cc-name { font-size: 0.9rem; color: #334155; font-weight: 500; }
+        .cc-item input { margin-right: 12px; margin-top: 4px; width: 16px; height: 16px; accent-color: var(--primary); cursor: pointer; flex-shrink: 0;}
+        
+        .cc-details { flex-grow: 1; }
+        .cc-name-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 5px; }
+        .cc-name { font-size: 0.9rem; color: #334155; font-weight: 600; }
         .cc-email { font-size: 0.75rem; color: #94a3b8; display: block; margin-top: 1px; }
+
+        /* Level Badges */
+        .badge { font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .badge-crm { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+        .badge-vp { background: #ffedd5; color: #9a3412; border: 1px solid #fed7aa; }
+        .badge-ceo { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
 
         /* Inner Action Button (Smaller than main toggle) */
         .btn-sub-action {
@@ -376,25 +387,30 @@
 
 <script>
 // --- Data ---
+// Levels: 'crm' (Green), 'vp' (Orange), 'ceo' (Red)
 const CC_LIST = [
-  { email: "enquiries@incorlakecity.com", name: "Enquiries Team" },
-  { email: "sanjay.padamatwar@incorlakecity.com", name: "Sanjay Padamatwar" },
-  { email: "abdulla.hussain@incorlakecity.com", name: "Abdulla Hussain" },
-  { email: "deepika.sripathi@incorlakecity.com", name: "Deepika Sripathi" },
-  { email: "swathi.kowlampet@incorlakecity.com", name: "Swathi Kowlampet" },
-  { email: "satyanarayana.potukuchi@incorlakecity.com", name: "Satyanarayana Potukuchi" },
-  { email: "srikanth.basineni@incorlakecity.com", name: "Srikanth Basineni" },
-  { email: "surya@incor.in", name: "Surya" },
-  { email: "info@incor.in", name: "Incor Info" },
-  { email: "ramesh.vantaram@incor.in", name: "Ramesh Vantaram" },
-  { email: "ananth.kalle@incor.in", name: "Ananth Kalle" },
-  { email: "prudhvi.chinta@incor.in", name: "Prudhvi Chinta" },
+  // CRM Level (Safe/Standard)
+  { email: "enquiries@incorlakecity.com", name: "Enquiries Team", level: "crm" },
+  { email: "info@incor.in", name: "Incor Info", level: "crm" },
+  { email: "abdulla.hussain@incorlakecity.com", name: "Hussain, CRM Team", level: "crm" },
+  { email: "swathi.kowlampet@incorlakecity.com", name: "Swathi, CRM Team", level: "crm" },
+  { email: "srikanth.basineni@incorlakecity.com", name: "Srikanth Basineni, CRM Head", level: "crm" },
+  
+  // VP Level (Caution)
+  { email: "ramesh.vantaram@incor.in", name: "Ramesh Vantaram, VP Sales", level: "vp" },
+  { email: "ananth.kalle@incor.in", name: "Ananth Kalle, VP Sales", level: "vp" },
+  
+  // CEO Level (Critical)
+  { email: "surya@incor.in", name: "Surya, CEO", level: "ceo" },
+  { email: "prudhvi.chinta@incor.in", name: "Prudhvi, CEO-Assetmonk", level: "ceo" }
 ];
 
+// 'label' is displayed in the UI, 'name' is used in the message greeting.
 const WA_CONTACTS = [
-  { name: "Srikanth", phone: "917674996742" },
-  { name: "Swati", phone: "9121315034" },
-  { name: "Hussain", phone: "8885722631" },
+  { label: "Shyam, CRM Manager", name: "Shyam", phone: "919121311648" },
+  { label: "Srikanth Basineni, CRM Head", name: "Srikanth", phone: "917674996742" },
+  { label: "Swati, CRM Team", name: "Swati", phone: "9121315034" },
+  { label: "Hussain, CRM Team", name: "Hussain", phone: "8885722631" },
 ];
 
 const FEEDBACK_PHONE = "918977496236";
@@ -408,12 +424,29 @@ document.addEventListener('DOMContentLoaded', () => {
 function renderCCList() {
     const container = document.getElementById('ccBody');
     let html = '';
-    CC_LIST.forEach((cc, index) => {
+    
+    CC_LIST.forEach((cc) => {
+        let badgeClass = "badge-crm";
+        let badgeText = "CRM";
+        
+        if (cc.level === 'vp') {
+            badgeClass = "badge-vp";
+            badgeText = "VP";
+        } else if (cc.level === 'ceo') {
+            badgeClass = "badge-ceo";
+            badgeText = "CEO";
+        } else if (cc.name === "Enquiries Team" || cc.name === "Incor Info") {
+             badgeText = "General";
+        }
+
         html += `
             <label class="cc-item">
                 <input type="checkbox" class="cc-checkbox" value="${cc.email}" checked onchange="updateCCCount()">
-                <div>
-                    <div class="cc-name">${cc.name}</div>
+                <div class="cc-details">
+                    <div class="cc-name-row">
+                        <span class="cc-name">${cc.name}</span>
+                        <span class="badge ${badgeClass}">${badgeText}</span>
+                    </div>
                     <div class="cc-email">${cc.email}</div>
                 </div>
             </label>
@@ -566,7 +599,7 @@ function renderWALinks(flat) {
         
         html += `
             <a href="${link}" class="wa-link" target="_blank">
-                <span>Chat with ${contact.name}</span>
+                <span>Chat with ${contact.label}</span>
                 <span style="font-size:1.1rem; color: #cbd5e1;">↗</span>
             </a>
         `;
