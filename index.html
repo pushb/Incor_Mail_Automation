@@ -4,19 +4,141 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Flat Email Generator</title>
 <style>
-body { font-family: Arial; padding: 20px; }
-#container { max-width: 500px; margin: auto; }
+body { font-family: Arial; padding: 20px; background:#f7f7f7; }
+#container { max-width: 500px; margin: auto; background:white; padding:25px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.1);} 
 label { font-weight: bold; display: block; margin-bottom: 8px; font-size: 18px; }
-input { width: 100%; padding: 12px; font-size: 20px; }
+input { width: 100%; padding: 12px; font-size: 20px; border-radius:8px; border:1px solid #ccc; }
+
 button {
  width: 100%; padding: 15px; font-size: 20px;
- margin-top: 20px; border: none; background: #007bff; color: white; border-radius: 6px;
+ margin-top: 20px; border: none;
+ background: #007bff; color: white; border-radius: 10px;
+ transition:0.25s ease;
 }
+button:hover { opacity:0.85; transform:scale(1.02); }
+
+.whats-section { 
+ display:none; margin-top:20px; 
+ transition: all 0.4s ease;
+ opacity:0;
+ transform: translateY(10px);
+}
+.whats-visible {
+ display:block !important;
+ opacity:1 !important;
+ transform: translateY(0px) !important;
+}
+
+#waButtons { display:none; opacity:0; transform:translateY(10px); transition:all 0.4s ease; }
+#waButtons.visible { display:block; opacity:1; transform:translateY(0); }
+
+.wa-btn {
+ background:#25D366; color:white;
+ border-radius:6px;
+ padding:10px 12px;
+ font-size:15px;
+ width:80%;
+ margin-top:8px;
+ margin-left:20px;
+ display:block;
+ text-align:left;
+ text-decoration:none;
+ transition:0.25s ease;
+}
+.wa-btn:hover { opacity:0.9; transform:scale(1.02); }
+
+#emailBtn button { border-radius:10px; }
+
+.action-card {
+ padding:0;
+ margin-top:20px;
+ background:none;
+ box-shadow:none;
+ border-radius:0;
+}
+.action-card h3 {
+ font-size:18px;
+ font-weight:bold;
+ margin-bottom:6px;
+ color:#333;
+}
+.action-card h3::before {
+ content:"📩";
+ font-size:24px;
+}
+.action-card h3 {
+ margin:0 0 10px 0;
+ font-size:20px;
+ color:#333;
+ font-weight:bold;
+}
+
 #error { color: red; margin-top: 15px; font-weight: bold; font-size: 20px; }
 .hint { color: #444; margin-top: 5px; font-size: 16px; line-height: 1.4; }
 </style>
 
 <script>
+function getGreeting() {
+    let h = new Date().getHours();
+    if (h >= 5 && h <= 11) return "Good morning";
+    if (h >= 12 && h <= 16) return "Good afternoon";
+    if (h >= 17 && h <= 20) return "Good evening";
+    return "Sorry to disturb you at night time";
+}
+
+function buildWhatsappMessage(flat, name) {
+    let greeting = getGreeting();
+    return `Hi ${name}, ${greeting}. I own flat number ${flat}, I wish to know the status of my flat as well as expected possession date. Can you please help me with that. Thanks in advance.`;
+}
+
+function showWhatsAppOptions(flat) {
+    // Ensure submenu is collapsed when showing options
+    const waButtons = document.getElementById("waButtons");
+    if (waButtons) {
+        waButtons.style.display = "none";
+        waButtons.style.opacity = "0";
+        waButtons.style.transform = "translateY(10px)";
+    }
+
+    let ws = document.getElementById("whatsSection");
+    if (ws) {
+        ws.style.display = "block";
+        setTimeout(()=>{ ws.style.opacity = "1"; ws.style.transform = "translateY(0px)"; }, 20);
+    }
+
+    const contacts = {
+        "Srikanth": "917674996742",
+        "Swati": "9121315034",
+        "Hussain": "8885722631"
+    };
+
+    const elSr = document.getElementById("waSrikanth");
+    const elSw = document.getElementById("waSwati");
+    const elHu = document.getElementById("waHussain");
+
+    if (elSr) elSr.href = "https://wa.me/" + contacts["Srikanth"] + "?text=" + encodeURIComponent(buildWhatsappMessage(flat, "Srikanth"));
+    if (elSw) elSw.href = "https://wa.me/" + contacts["Swati"] + "?text=" + encodeURIComponent(buildWhatsappMessage(flat, "Swati"));
+    if (elHu) elHu.href = "https://wa.me/" + contacts["Hussain"] + "?text=" + encodeURIComponent(buildWhatsappMessage(flat, "Hussain"));
+}
+
+function toggleWaButtons() {
+    let btns = document.getElementById("waButtons");
+    let arrow = document.getElementById("waArrow");
+
+    if (!btns) return;
+
+    if (btns.style.display === "none" || btns.style.display === "") {
+        btns.style.display = "block";
+        setTimeout(()=>{ btns.style.opacity = "1"; btns.style.transform = "translateY(0)"; },10);
+        if (arrow) arrow.style.transform = "rotate(180deg)";
+    } else {
+        btns.style.opacity = "0";
+        btns.style.transform = "translateY(10px)";
+        setTimeout(()=>{ btns.style.display = "none"; },200);
+        if (arrow) arrow.style.transform = "rotate(0deg)";
+    }
+}
+
 function validateFlat() {
     let flat = document.getElementById("flat").value.trim().toUpperCase();
     let error = "";
@@ -30,7 +152,6 @@ function validateFlat() {
                "- A1121 → Tower A, Floor 11, House 21<br>";
     }
 
-    // Length issue
     if(flat.length !== 5) {
         error = "Invalid Flat Number Format";
         friendly = "The flat number should be exactly 5 characters like <b>A0203</b> or <b>B0107</b>.<br><br>" + exampleBlock();
@@ -46,8 +167,7 @@ function validateFlat() {
         }
         else if(isNaN(floor) || floor < 1 || floor > 23) {
             error = "Invalid Floor";
-            friendly = "Are you sure " + (isNaN(floor) ? "that" : floor) +
-                       " is your floor number? Valid floors are 01–23.<br><br>" + exampleBlock();
+            friendly = "Valid floors are 01–23.<br><br>" + exampleBlock();
         }
         else if(isNaN(house)) {
             error = "Invalid House Number";
@@ -55,14 +175,10 @@ function validateFlat() {
         }
         else {
             if(tower === "A" && (house < 1 || house > 33)) {
-                error = "Invalid House Number";
-                friendly = "Are you sure " + house +
-                           " is your house number? Tower A has houses 01–33.<br><br>" + exampleBlock();
+                error = "Invalid house for Tower A (valid: 01–33).<br><br>" + exampleBlock();
             }
             if(tower === "B" && (house < 1 || house > 35)) {
-                error = "Invalid House Number";
-                friendly = "Are you sure " + house +
-                           " is your house number? Tower B has houses 01–35.<br><br>" + exampleBlock();
+                error = "Invalid house for Tower B (valid: 01–35).<br><br>" + exampleBlock();
             }
         }
     }
@@ -71,13 +187,25 @@ function validateFlat() {
         document.getElementById("error").innerHTML =
             "<span style='font-size:22px;'>" + error + "</span><br>" +
             "<span class='hint'>" + friendly + "</span>";
-        document.getElementById("emailBtn").style.display = "none";
+
+        // Hide both cards fully
+        let ec = document.getElementById("emailCard");
+        let ws = document.getElementById("whatsSection");
+        if (ec) ec.style.display = "none";
+        if (ws) ws.style.display = "none";
+
+        // Collapse WA submenu
+        let wb = document.getElementById("waButtons");
+        if (wb) {
+            wb.style.display = "none";
+            wb.style.opacity = "0";
+            wb.style.transform = "translateY(10px)";
+        }
         return;
     }
 
     document.getElementById("error").innerText = "";
 
-    // Build mail body
     let today = new Date();
     let dd = String(today.getDate()).padStart(2,'0');
     let mm = String(today.getMonth()+1).padStart(2,'0');
@@ -110,8 +238,18 @@ Flat owner of ${flat}`;
         "&subject=" + encodeURIComponent(subject) +
         "&body=" + encodeURIComponent(body);
 
-    document.getElementById("emailBtn").href = mailtoLink;
-    document.getElementById("emailBtn").style.display = "block";
+    const emailBtn = document.getElementById("emailBtn");
+    if (emailBtn) emailBtn.href = mailtoLink;
+
+    const emailCard = document.getElementById("emailCard");
+    if (emailCard) {
+        emailCard.style.display = "block";
+        emailCard.style.opacity = "1";
+        emailCard.style.transform = "translateY(0px)";
+    }
+
+    // Show WhatsApp options (collapsed)
+    showWhatsAppOptions(flat);
 }
 </script>
 </head>
@@ -121,10 +259,26 @@ Flat owner of ${flat}`;
     <label>Enter your flat number (e.g., A0203, B0107):</label>
     <input id="flat" placeholder="e.g., A0203" />
     <button onclick="validateFlat()">Next</button>
+
     <div id="error"></div>
-    <a id="emailBtn" style="display:none; text-decoration:none;">
-        <button style="background:green;">Open mail app to send mail</button>
+
+    <div class="action-card" style="display:none;" id="emailCard">
+    <a id="emailBtn" style="display:block; text-decoration:none; margin-top:15px;">
+        <button style="background:green; border-radius:10px;">Send Email</button>
     </a>
+</div>
+
+    <!-- WhatsApp section -->
+<div class="action-card" id="whatsSection" style="display:none; opacity:0; transform:translateY(10px);">
+    <button style="background:#128C7E; border-radius:10px; margin-top:15px;" onclick="toggleWaButtons()">Send via WhatsApp <span id="waArrow" style="display:inline-block; transition:0.3s ease; transform:rotate(0deg);">▼</span></button>
+    <div id="waButtons" style="margin-top:10px; display:none; opacity:0; transform:translateY(10px); transition:all 0.3s ease;">
+        <a id="waSrikanth" class="wa-btn">Send to Srikanth</a>
+        <a id="waSwati" class="wa-btn">Send to Swati</a>
+        <a id="waHussain" class="wa-btn">Send to Hussain</a>
+    </div>
+</div>
+</div>
+    </div>
 </div>
 </body>
 </html>
